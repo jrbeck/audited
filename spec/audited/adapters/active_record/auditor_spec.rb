@@ -4,11 +4,11 @@ describe Audited::Auditor, :adapter => :active_record do
 
   describe "configuration" do
     it "should include instance methods" do
-      Models::ActiveRecord::User.new.should be_a_kind_of( Audited::Auditor::AuditedInstanceMethods)
+      Models::ActiveRecord::User.new.should be_a_kind_of(Audited::Auditor::AuditedInstanceMethods)
     end
 
     it "should include class methods" do
-      Models::ActiveRecord::User.should be_a_kind_of( Audited::Auditor::AuditedClassMethods )
+      Models::ActiveRecord::User.should be_a_kind_of(Audited::Auditor::AuditedClassMethods)
     end
 
     ['created_at', 'updated_at', 'created_on', 'updated_on', 'lock_version', 'id', 'password'].each do |column|
@@ -27,7 +27,7 @@ describe Audited::Auditor, :adapter => :active_record do
     end
 
     it "should not save non-audited columns" do
-      create_active_record_user.audits.first.audited_changes.keys.any? { |col| ['created_at', 'updated_at', 'password'].include?( col ) }.should be_false
+      create_active_record_user.audits.first.audited_changes.keys.any? { |col| ['created_at', 'updated_at', 'password'].include?(col) }.should be_false
     end
   end
 
@@ -35,7 +35,8 @@ describe Audited::Auditor, :adapter => :active_record do
     it "should allow mass assignment of all unprotected attributes" do
       yesterday = 1.day.ago
 
-      u = Models::ActiveRecord::NoAttributeProtectionUser.new(:name         => 'name',
+      u = Models::ActiveRecord::NoAttributeProtectionUser.new(
+                                        :name         => 'name',
                                         :username     => 'username',
                                         :password     => 'password',
                                         :activated    => true,
@@ -52,12 +53,12 @@ describe Audited::Auditor, :adapter => :active_record do
   end
 
   describe "on create" do
-    let( :user ) { create_active_record_user :audit_comment => "Create" }
+    let(:user) { create_active_record_user :audit_comment => "Create" }
 
     it "should change the audit count" do
       expect {
         user
-      }.to change( Audited.audit_class, :count ).by(1)
+      }.to change(Audited.audit_class, :count).by(1)
     end
 
     it "should create associated audit" do
@@ -87,8 +88,8 @@ describe Audited::Auditor, :adapter => :active_record do
 
     it "should not save an audit if only specified on update/destroy" do
       expect {
-        Models::ActiveRecord::OnUpdateDestroy.create!( :name => 'Bart' )
-      }.to_not change( Audited.audit_class, :count )
+        Models::ActiveRecord::OnUpdateDestroy.create!(:name => 'Bart')
+      }.to_not change(Audited.audit_class, :count)
     end
   end
 
@@ -123,31 +124,31 @@ describe Audited::Auditor, :adapter => :active_record do
     end
 
     it "should not save an audit if only specified on create/destroy" do
-      on_create_destroy = Models::ActiveRecord::OnCreateDestroy.create( :name => 'Bart' )
+      on_create_destroy = Models::ActiveRecord::OnCreateDestroy.create(:name => 'Bart')
       expect {
         on_create_destroy.update_attributes :name => 'Changed'
-      }.to_not change( Audited.audit_class, :count )
+      }.to_not change(Audited.audit_class, :count)
     end
 
     it "should not save an audit if the value doesn't change after type casting" do
       @user.update_attributes! :logins => 0, :activated => true
-      expect { @user.update_attribute :logins, '0' }.to_not change( Audited.audit_class, :count )
-      expect { @user.update_attribute :activated, 1 }.to_not change( Audited.audit_class, :count )
-      expect { @user.update_attribute :activated, '1' }.to_not change( Audited.audit_class, :count )
+      expect { @user.update_attribute :logins, '0' }.to_not change(Audited.audit_class, :count)
+      expect { @user.update_attribute :activated, 1 }.to_not change(Audited.audit_class, :count)
+      expect { @user.update_attribute :activated, '1' }.to_not change(Audited.audit_class, :count)
     end
 
     describe "with no dirty changes" do
       it "does not create an audit if the record is not changed" do
         expect {
           @user.save!
-        }.to_not change( Audited.audit_class, :count )
+        }.to_not change(Audited.audit_class, :count)
       end
 
       it "creates an audit when an audit comment is present" do
         expect {
           @user.audit_comment = "Comment"
           @user.save!
-        }.to change( Audited.audit_class, :count )
+        }.to change(Audited.audit_class, :count)
       end
     end
   end
@@ -160,7 +161,7 @@ describe Audited::Auditor, :adapter => :active_record do
     it "should save an audit" do
       expect {
         @user.destroy
-      }.to change( Audited.audit_class, :count )
+      }.to change(Audited.audit_class, :count)
 
       @user.audits.size.should be(2)
     end
@@ -188,11 +189,11 @@ describe Audited::Auditor, :adapter => :active_record do
     end
 
     it "should not save an audit if only specified on create/update" do
-      on_create_update = Models::ActiveRecord::OnCreateUpdate.create!( :name => 'Bart' )
+      on_create_update = Models::ActiveRecord::OnCreateUpdate.create!(:name => 'Bart')
 
       expect {
         on_create_update.destroy
-      }.to_not change( Audited.audit_class, :count )
+      }.to_not change(Audited.audit_class, :count)
     end
   end
 
@@ -278,13 +279,13 @@ describe Audited::Auditor, :adapter => :active_record do
     end
 
     it "should ignore attributes that have been deleted" do
-      user.audits.last.update_attributes :audited_changes => {:old_attribute => 'old value'}
+      user.audits.last.update_attributes :audited_changes => { :old_attribute => 'old value' }
       expect { user.revisions }.to_not raise_error
     end
   end
 
   describe "revisions" do
-    let( :user ) { create_versions(5) }
+    let(:user) { create_versions(5) }
 
     it "should maintain identity" do
       user.revision(1).should == user
@@ -292,22 +293,22 @@ describe Audited::Auditor, :adapter => :active_record do
 
     it "should find the given revision" do
       revision = user.revision(3)
-      revision.should be_a_kind_of( Models::ActiveRecord::User )
-      revision.version.should be(3)
+      revision.should be_a_kind_of(Models::ActiveRecord::User)
+      revision.audited_version.should be(3)
       revision.name.should == 'Foobar 3'
     end
 
     it "should find the previous revision with :previous" do
       revision = user.revision(:previous)
-      revision.version.should be(4)
+      revision.audited_version.should be(4)
       #revision.should == user.revision(4)
       revision.attributes.should == user.revision(4).attributes
     end
 
     it "should be able to get the previous revision repeatedly" do
       previous = user.revision(:previous)
-      previous.version.should be(4)
-      previous.revision(:previous).version.should be(3)
+      previous.audited_version.should be(4)
+      previous.revision(:previous).audited_version.should be(3)
     end
 
     it "should be able to set protected attributes" do
@@ -358,14 +359,14 @@ describe Audited::Auditor, :adapter => :active_record do
     it "should record new audit when saving revision" do
       expect {
         user.revision(1).save!
-      }.to change( user.audits, :count ).by(1)
+      }.to change(user.audits, :count).by(1)
     end
 
     it "should re-insert destroyed records" do
       user.destroy
       expect {
         user.revision(1).save!
-      }.to change( Models::ActiveRecord::User, :count ).by(1)
+      }.to change(Models::ActiveRecord::User, :count).by(1)
     end
   end
 
@@ -377,7 +378,7 @@ describe Audited::Auditor, :adapter => :active_record do
       audit.created_at = 1.hour.ago
       audit.save!
       user.update_attributes :name => 'updated'
-      user.revision_at( 2.minutes.ago ).version.should be(1)
+      user.revision_at(2.minutes.ago).audited_version.should be(1)
     end
 
     it "should be nil if given a time before audits" do
@@ -390,13 +391,13 @@ describe Audited::Auditor, :adapter => :active_record do
       expect {
         u = Models::ActiveRecord::User.new(:name => 'Brandon')
         u.save_without_auditing.should be_true
-      }.to_not change( Audited.audit_class, :count )
+      }.to_not change(Audited.audit_class, :count)
     end
 
     it "should not save an audit inside of the #without_auditing block" do
       expect {
-        Models::ActiveRecord::User.without_auditing { Models::ActiveRecord::User.create!( :name => 'Brandon' ) }
-      }.to_not change( Audited.audit_class, :count )
+        Models::ActiveRecord::User.without_auditing { Models::ActiveRecord::User.create!(:name => 'Brandon') }
+      }.to_not change(Audited.audit_class, :count)
     end
   end
 
@@ -408,7 +409,7 @@ describe Audited::Auditor, :adapter => :active_record do
       end
 
       it "should validate when audit_comment is supplied" do
-        Models::ActiveRecord::CommentRequiredUser.new( :audit_comment => 'Create').should be_valid
+        Models::ActiveRecord::CommentRequiredUser.new(:audit_comment => 'Create').should be_valid
       end
 
       it "should validate when audit_comment is not supplied, and auditing is disabled" do
@@ -419,7 +420,7 @@ describe Audited::Auditor, :adapter => :active_record do
     end
 
     describe "on update" do
-      let( :user ) { Models::ActiveRecord::CommentRequiredUser.create!( :audit_comment => 'Create' ) }
+      let( :user ) { Models::ActiveRecord::CommentRequiredUser.create!(:audit_comment => 'Create') }
 
       it "should not validate when audit_comment is not supplied" do
         user.update_attributes(:name => 'Test').should be_false
@@ -437,7 +438,7 @@ describe Audited::Auditor, :adapter => :active_record do
     end
 
     describe "on destroy" do
-      let( :user ) { Models::ActiveRecord::CommentRequiredUser.create!( :audit_comment => 'Create' )}
+      let(:user) { Models::ActiveRecord::CommentRequiredUser.create!(:audit_comment => 'Create')}
 
       it "should not validate when audit_comment is not supplied" do
         user.destroy.should be_false
@@ -473,10 +474,10 @@ describe Audited::Auditor, :adapter => :active_record do
   end
 
   describe "audit_as" do
-    let( :user ) { Models::ActiveRecord::User.create :name => 'Testing' }
+    let(:user) { Models::ActiveRecord::User.create :name => 'Testing' }
 
     it "should record user objects" do
-      Models::ActiveRecord::Company.audit_as( user ) do
+      Models::ActiveRecord::Company.audit_as(user) do
         company = Models::ActiveRecord::Company.create :name => 'The auditors'
         company.update_attributes :name => 'The Auditors'
 
@@ -487,7 +488,7 @@ describe Audited::Auditor, :adapter => :active_record do
     end
 
     it "should record usernames" do
-      Models::ActiveRecord::Company.audit_as( user.name ) do
+      Models::ActiveRecord::Company.audit_as(user.name) do
         company = Models::ActiveRecord::Company.create :name => 'The auditors'
         company.update_attributes :name => 'The Auditors'
 
@@ -499,7 +500,7 @@ describe Audited::Auditor, :adapter => :active_record do
   end
 
   describe "after_audit" do
-    let( :user ) { user = Models::ActiveRecord::UserWithAfterAudit.new }
+    let(:user) { user = Models::ActiveRecord::UserWithAfterAudit.new }
 
     it "should invoke after_audit callback on create" do
       user.bogus_attr.should == nil

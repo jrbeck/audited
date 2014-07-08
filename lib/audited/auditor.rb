@@ -70,7 +70,7 @@ module Audited
         define_callbacks :audit
         set_callback :audit, :after, :after_audit, :if => lambda { self.respond_to?(:after_audit) }
 
-        attr_accessor :version
+        attr_accessor :audited_version
 
         extend Audited::Auditor::AuditedClassMethods
         include Audited::Auditor::AuditedInstanceMethods
@@ -171,8 +171,8 @@ module Audited
 
       def audits_to(version = nil)
         if version == :previous
-          version = if self.version
-                      self.version - 1
+          version = if self.audited_version
+                      self.audited_version - 1
                     else
                       previous = audits.descending.offset(1).first
                       previous ? previous.version : 1
@@ -201,13 +201,13 @@ module Audited
       def write_audit(attrs)
         attrs[:associated] = self.send(audit_associated_with) unless audit_associated_with.nil?
         self.audit_comment = nil
-        run_callbacks(:audit)  { self.audits.create(attrs) } if auditing_enabled
+        run_callbacks(:audit) { self.audits.create(attrs) } if auditing_enabled
       end
 
       def require_comment
         if auditing_enabled && audit_comment.blank?
           errors.add(:audit_comment, "Comment required before destruction")
-          return false
+          false
         end
       end
 
@@ -250,8 +250,8 @@ module Audited
       # made by +user+. This is not model specific, the method is a
       # convenience wrapper around
       # @see Audit#as_user.
-      def audit_as( user, &block )
-        Audited.audit_class.as_user( user, &block )
+      def audit_as(user, &block)
+        Audited.audit_class.as_user(user, &block)
       end
     end
   end

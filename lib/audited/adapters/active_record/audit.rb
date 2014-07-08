@@ -17,19 +17,19 @@ module Audited
         include Audited::Audit
         include ActiveModel::Observing
 
-
         serialize :audited_changes
 
-        default_scope         ->{ order(:version)}
-        scope :descending,    ->{ reorder("version DESC")}
-        scope :creates,       ->{ where({:action => 'create'})}
-        scope :updates,       ->{ where({:action => 'update'})}
-        scope :destroys,      ->{ where({:action => 'destroy'})}
+        default_scope         ->{ order(:version) }
+        scope :descending,    ->{ reorder("version DESC") }
+        scope :creates,       ->{ where({ :action => 'create' }) }
+        scope :updates,       ->{ where({ :action => 'update' }) }
+        scope :destroys,      ->{ where({ :action => 'destroy' }) }
 
-        scope :up_until,      ->(date_or_time){where("created_at <= ?", date_or_time) }
-        scope :from_version,  ->(version){where(['version >= ?', version]) }
-        scope :to_version,    ->(version){where(['version <= ?', version]) }
-        scope :auditable_finder, ->(auditable_id, auditable_type){where(auditable_id: auditable_id, auditable_type: auditable_type)}
+        scope :up_until,      ->(date_or_time) { where("created_at <= ?", date_or_time) }
+        scope :from_version,  ->(version) { where(['version >= ?', version]) }
+        scope :to_version,    ->(version) { where(['version <= ?', version]) }
+        scope :auditable_finder, ->(auditable_id, auditable_type) { where(auditable_id: auditable_id, auditable_type: auditable_type) }
+
         # Return all audits older than the current one.
         def ancestors
           self.class.where(['auditable_id = ? and auditable_type = ? and version <= ?',
@@ -55,11 +55,12 @@ module Audited
         alias_method :user_as_model, :user
         alias_method :user, :user_as_string
 
-      private
+        private
         def set_version_number
           max = self.class.auditable_finder(auditable_id, auditable_type).maximum(:version) || 0
           self.version = max + 1
         end
+
       end
     end
   end

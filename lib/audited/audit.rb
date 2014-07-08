@@ -37,7 +37,7 @@ module Audited
       def reconstruct_attributes(audits)
         attributes = {}
         result = audits.collect do |audit|
-          attributes.merge!(audit.new_attributes).merge!(:version => audit.version)
+          attributes.merge!(audit.new_attributes).merge!(:audited_version => audit.version)
           yield attributes if block_given?
         end
         block_given? ? result : attributes
@@ -63,7 +63,7 @@ module Audited
     def revision
       clazz = auditable_type.constantize
       (clazz.find_by_id(auditable_id) || clazz.new).tap do |m|
-        self.class.assign_revision_attributes(m, self.class.reconstruct_attributes(ancestors).merge({ :version => version }))
+        self.class.assign_revision_attributes(m, self.class.reconstruct_attributes(ancestors).merge({ :audited_version => version }))
       end
     end
 
@@ -89,8 +89,8 @@ module Audited
       max = self.class.where(
         :auditable_id => auditable_id,
         :auditable_type => auditable_type
-      ).order(:version.desc).first.try(:version) || 0
-      self.version = max + 1
+      ).order(:audit_version.desc).first.try(:audit_version) || 0
+      self.audit_version = max + 1
     end
 
     def set_audit_user
